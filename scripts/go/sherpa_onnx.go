@@ -1259,6 +1259,7 @@ func NewOfflineSpeakerDiarization(config *OfflineSpeakerDiarizationConfig) *Offl
 	c.clustering.threshold = C.float(config.Clustering.Threshold)
 	c.min_duration_on = C.float(config.MinDurationOn)
 	c.min_duration_off = C.float(config.MinDurationOff)
+	c.extract_speaker_embeddings = C.bool(config.ExtractSpeakerEmbeddings)
 
 	p := C.SherpaOnnxCreateOfflineSpeakerDiarization(&c)
 

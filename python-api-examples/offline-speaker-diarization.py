@@ -71,6 +71,7 @@ def init_speaker_diarization(num_speakers: int = -1, cluster_threshold: float = 
         ),
         min_duration_on=0.3,
         min_duration_off=0.5,
+        extract_speaker_embeddings=False,
     )
     if not config.validate():
         raise RuntimeError(

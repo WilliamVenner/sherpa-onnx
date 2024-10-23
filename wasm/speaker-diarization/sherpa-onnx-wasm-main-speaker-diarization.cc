@@ -48,6 +48,7 @@ void MyPrint(const SherpaOnnxOfflineSpeakerDiarizationConfig *sd_config) {
   fprintf(stdout, "num threads: %d\n", embedding.num_threads);
   fprintf(stdout, "debug: %d\n", embedding.debug);
   fprintf(stdout, "provider: %s\n", embedding.provider);
+  fprintf(stdout, "extract_speaker_embeddings: %d\n", sd_config->extract_speaker_embeddings);
 
   fprintf(stdout, "----------clustering config----------\n");
   fprintf(stdout, "num_clusters: %d\n", clustering.num_clusters);

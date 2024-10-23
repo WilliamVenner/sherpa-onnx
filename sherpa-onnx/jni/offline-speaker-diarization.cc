@@ -92,6 +92,9 @@ static OfflineSpeakerDiarizationConfig GetOfflineSpeakerDiarizationConfig(
   fid = env->GetFieldID(cls, "minDurationOff", "F");
   ans.min_duration_off = env->GetFloatField(config, fid);
 
+  fid = env->GetFieldID(cls, "extractSpeakerEmbeddings", "Z");
+  ans.extract_speaker_embeddings = env->GetBooleanField(config, fid);
+
   return ans;
 }
 

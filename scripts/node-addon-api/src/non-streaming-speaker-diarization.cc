@@ -128,6 +128,7 @@ CreateOfflineSpeakerDiarizationWrapper(const Napi::CallbackInfo &info) {
 
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(min_duration_on, minDurationOn);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(min_duration_off, minDurationOff);
+  SHERPA_ONNX_ASSIGN_ATTR_BOOL(extract_speaker_embeddings, extractSpeakerEmbeddings);
 
   const SherpaOnnxOfflineSpeakerDiarization *sd =
       SherpaOnnxCreateOfflineSpeakerDiarization(&c);

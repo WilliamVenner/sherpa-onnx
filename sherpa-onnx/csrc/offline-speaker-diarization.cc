@@ -28,6 +28,10 @@ void OfflineSpeakerDiarizationConfig::Register(ParseOptions *po) {
                "if the gap between to segments of the same speaker is less "
                "than this value, then these two segments are merged into a "
                "single segment. We do it recursively.");
+
+  po->Register("extract-speaker-embeddings", &extract_speaker_embeddings,
+               "Whether to store speaker embeddings during diarization so they "
+               "can be extracted later on.");
 }
 
 bool OfflineSpeakerDiarizationConfig::Validate() const {
@@ -65,6 +69,7 @@ std::string OfflineSpeakerDiarizationConfig::ToString() const {
   os << "clustering=" << clustering.ToString() << ", ";
   os << "min_duration_on=" << min_duration_on << ", ";
   os << "min_duration_off=" << min_duration_off << ")";
+  os << "extract_speaker_embeddings=" << extract_speaker_embeddings << ")";
 
   return os.str();
 }

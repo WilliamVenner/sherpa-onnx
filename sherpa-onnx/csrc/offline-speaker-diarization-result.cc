@@ -66,6 +66,16 @@ void OfflineSpeakerDiarizationResult::Add(
   segments_.push_back(segment);
 }
 
+void OfflineSpeakerDiarizationResult::AddSpeakerEmbeddings(
+    const int32_t speaker_label, const std::vector<float> &embedding) {
+  speaker_embeddings_map_[speaker_label] = embedding;
+}
+
+std::vector<float> OfflineSpeakerDiarizationResult::GetSpeakerEmbeddings(
+    const int32_t speaker_label) const {
+  return speaker_embeddings_map_.at(speaker_label);
+}
+
 int32_t OfflineSpeakerDiarizationResult::NumSpeakers() const {
   std::unordered_set<int32_t> count;
   for (const auto &s : segments_) {

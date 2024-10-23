@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace sherpa_onnx {
@@ -45,6 +46,13 @@ class OfflineSpeakerDiarizationResult {
   // Add a new segment
   void Add(const OfflineSpeakerDiarizationSegment &segment);
 
+  // Add a speaker's extracted embeddings
+  void AddSpeakerEmbeddings(const int32_t speaker_label,
+                            const std::vector<float> &embeddings);
+
+  // Return the embeddings of the speaker with the given label
+  std::vector<float> GetSpeakerEmbeddings(const int32_t speaker_label) const;
+
   // Number of distinct speakers contained in this object at this point
   int32_t NumSpeakers() const;
 
@@ -60,6 +68,7 @@ class OfflineSpeakerDiarizationResult {
 
  private:
   std::vector<OfflineSpeakerDiarizationSegment> segments_;
+  std::unordered_map<int32_t, std::vector<float>> speaker_embeddings_map_;
 };
 
 }  // namespace sherpa_onnx

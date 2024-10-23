@@ -1124,14 +1124,16 @@ func sherpaOnnxOfflineSpeakerDiarizationConfig(
   embedding: SherpaOnnxSpeakerEmbeddingExtractorConfig,
   clustering: SherpaOnnxFastClusteringConfig,
   minDurationOn: Float = 0.3,
-  minDurationOff: Float = 0.5
+  minDurationOff: Float = 0.5,
+  extractSpeakerEmbeddings: Bool = false
 ) -> SherpaOnnxOfflineSpeakerDiarizationConfig {
   return SherpaOnnxOfflineSpeakerDiarizationConfig(
     segmentation: segmentation,
     embedding: embedding,
     clustering: clustering,
     min_duration_on: minDurationOn,
-    min_duration_off: minDurationOff
+    min_duration_off: minDurationOff,
+    extract_speaker_embeddings: extractSpeakerEmbeddings
   )
 }
 

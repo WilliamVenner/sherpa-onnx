@@ -41,4 +41,11 @@
     }                                                             \
   } while (0)
 
+#define SHERPA_ONNX_ASSIGN_ATTR_BOOL(c_name, js_name)            \
+  do {                                                            \
+    if (o.Has(#js_name) && o.Get(#js_name).IsNumber()) {          \
+      c.c_name = o.Get(#js_name).As<Napi::Number>().Value(); \
+    }                                                             \
+  } while (0)
+
 #endif  // SCRIPTS_NODE_ADDON_API_SRC_MACROS_H_

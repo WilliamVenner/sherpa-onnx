@@ -50,12 +50,14 @@ static void PybindOfflineSpeakerDiarizationConfig(py::module *m) {
                     const SpeakerEmbeddingExtractorConfig &,
                     const FastClusteringConfig &, float, float>(),
            py::arg("segmentation"), py::arg("embedding"), py::arg("clustering"),
-           py::arg("min_duration_on") = 0.3, py::arg("min_duration_off") = 0.5)
+           py::arg("min_duration_on") = 0.3, py::arg("min_duration_off") = 0.5,
+           py::arg("extract_speaker_embeddings"))
       .def_readwrite("segmentation", &PyClass::segmentation)
       .def_readwrite("embedding", &PyClass::embedding)
       .def_readwrite("clustering", &PyClass::clustering)
       .def_readwrite("min_duration_on", &PyClass::min_duration_on)
       .def_readwrite("min_duration_off", &PyClass::min_duration_off)
+      .def_readwrite("extract_speaker_embeddings", &PyClass::extract_speaker_embeddings)
       .def("__str__", &PyClass::ToString)
       .def("validate", &PyClass::Validate);
 }

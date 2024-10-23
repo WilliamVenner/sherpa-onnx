@@ -25,6 +25,7 @@ struct OfflineSpeakerDiarizationConfig {
   OfflineSpeakerSegmentationModelConfig segmentation;
   SpeakerEmbeddingExtractorConfig embedding;
   FastClusteringConfig clustering;
+  bool extract_speaker_embeddings = false;
 
   // if a segment is less than this value, then it is discarded
   float min_duration_on = 0.3;  // in seconds
@@ -45,7 +46,8 @@ struct OfflineSpeakerDiarizationConfig {
         embedding(embedding),
         clustering(clustering),
         min_duration_on(min_duration_on),
-        min_duration_off(min_duration_off) {}
+        min_duration_off(min_duration_off),
+        extract_speaker_embeddings(extract_speaker_embeddings) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

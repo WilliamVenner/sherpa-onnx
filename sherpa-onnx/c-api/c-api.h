@@ -12,6 +12,7 @@
 #ifndef SHERPA_ONNX_C_API_C_API_H_
 #define SHERPA_ONNX_C_API_C_API_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -1430,6 +1431,10 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineSpeakerDiarizationConfig {
   // then these two segments are merged into a single segment.
   // We do this recursively.
   float min_duration_off;  // in seconds
+
+  // Whether to store speaker embeddings during diarization so they
+  // can be extracted later on.
+  bool extract_speaker_embeddings;
 } SherpaOnnxOfflineSpeakerDiarizationConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineSpeakerDiarization
@@ -1468,6 +1473,15 @@ SHERPA_ONNX_API int32_t SherpaOnnxOfflineSpeakerDiarizationResultGetNumSpeakers(
 
 SHERPA_ONNX_API int32_t SherpaOnnxOfflineSpeakerDiarizationResultGetNumSegments(
     const SherpaOnnxOfflineSpeakerDiarizationResult *r);
+
+SHERPA_ONNX_API void
+SherpaOnnxOfflineSpeakerDiarizationResultGetSpeakerEmbeddings(
+    const SherpaOnnxOfflineSpeakerDiarizationResult *r,
+    const int32_t speaker_label, float **embeddings, int32_t *num_embeddings);
+
+SHERPA_ONNX_API void
+SherpaOnnxOfflineSpeakerDiarizationResultFreeSpeakerEmbeddings(
+    float *embeddings);
 
 // The user has to invoke SherpaOnnxOfflineSpeakerDiarizationDestroySegment()
 // to free the returned pointer to avoid memory leak.

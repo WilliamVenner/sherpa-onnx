@@ -1721,6 +1721,8 @@ SherpaOnnxCreateOfflineSpeakerDiarization(
 
   sd_config.min_duration_off = SHERPA_ONNX_OR(config->min_duration_off, 0.5);
 
+  sd_config.extract_speaker_embeddings = config->extract_speaker_embeddings;
+
   if (!sd_config.Validate()) {
     SHERPA_ONNX_LOGE("Errors in config");
     return nullptr;
@@ -1771,6 +1773,27 @@ int32_t SherpaOnnxOfflineSpeakerDiarizationResultGetNumSpeakers(
 int32_t SherpaOnnxOfflineSpeakerDiarizationResultGetNumSegments(
     const SherpaOnnxOfflineSpeakerDiarizationResult *r) {
   return r->impl.NumSegments();
+}
+
+void SherpaOnnxOfflineSpeakerDiarizationResultGetSpeakerEmbeddings(
+    const SherpaOnnxOfflineSpeakerDiarizationResult *r,
+    const int32_t speaker_label, float **embeddings, int32_t *num_embeddings) {
+  std::vector<float> embeddings_vector;
+
+  try {
+    embeddings_vector = r->impl.GetSpeakerEmbeddings(speaker_label);
+  } catch (const std::out_of_range &e) {
+    return;
+  }
+
+  *num_embeddings = embeddings_vector.size();
+  *embeddings = new float[*num_embeddings];
+  std::copy(embeddings_vector.begin(), embeddings_vector.end(), *embeddings);
+}
+
+void SherpaOnnxOfflineSpeakerDiarizationResultFreeSpeakerEmbeddings(
+    float *embeddings) {
+  delete[] embeddings;
 }
 
 const SherpaOnnxOfflineSpeakerDiarizationSegment *

@@ -100,6 +100,8 @@ class OfflineSpeakerDiarizationPyannoteImpl
       const float *audio, int32_t n,
       OfflineSpeakerDiarizationProgressCallback callback = nullptr,
       void *callback_arg = nullptr) const override {
+    std::unordered_map<int32_t, std::vector<float>> speaker_embeddings_map;
+
     std::vector<Matrix2D> segmentations = RunSpeakerSegmentationModel(audio, n);
     // segmentations[i] is for chunk_i
     // Each matrix is of shape (num_frames, num_powerset_classes)
@@ -116,12 +118,12 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
     segmentations.clear();
 
-    if (labels.size() == 1) {
+    if (labels.size() == 1 && !config_.extract_speaker_embeddings) {
       if (callback) {
         callback(1, 1, callback_arg);
       }
 
-      return HandleOneChunkSpecialCase(labels[0], n);
+      return HandleOneChunkSpecialCase(labels[0], n, speaker_embeddings_map);
     }
 
     // labels[i] is a 0-1 matrix of shape (num_frames, num_speakers)
@@ -142,6 +144,19 @@ class OfflineSpeakerDiarizationPyannoteImpl
     std::vector<int32_t> cluster_labels = clustering_->Cluster(
         &embeddings(0, 0), embeddings.rows(), embeddings.cols());
 
+    if (config_.extract_speaker_embeddings) {
+      speaker_embeddings_map =
+          ExtractSpeakerEmbeddings(cluster_labels, embeddings);
+
+      if (labels.size() == 1) {
+        if (callback) {
+          callback(1, 1, callback_arg);
+        }
+
+        return HandleOneChunkSpecialCase(labels[0], n, speaker_embeddings_map);
+      }
+    }
+
     int32_t max_cluster_index =
         *std::max_element(cluster_labels.begin(), cluster_labels.end());
 
@@ -156,7 +171,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
     Matrix2DInt32 final_labels =
         FinalizeLabels(speaker_count, speakers_per_frame);
 
-    auto result = ComputeResult(final_labels);
+    auto result = ComputeResult(final_labels, speaker_embeddings_map);
 
     return result;
   }
@@ -471,6 +486,41 @@ class OfflineSpeakerDiarizationPyannoteImpl
     return ans;
   }
 
+  /**
+   * @param cluster_labels: cluster labels for each (chunk, speaker) pair
+   * @param embeddings: embeddings for each (chunk, speaker) pair
+   *
+   * @return Average embeddings for each cluster label
+   */
+  std::unordered_map<int32_t, std::vector<float>> ExtractSpeakerEmbeddings(
+      std::vector<int32_t> &cluster_labels, Matrix2D &embeddings) const {
+    std::unordered_map<int32_t, std::vector<float>> speaker_embeddings_map;
+    std::unordered_map<int32_t, std::vector<int32_t>>
+        cluster_to_embedding_indices;
+
+    for (int32_t i = 0; i < cluster_labels.size(); ++i) {
+      int32_t cluster_label = cluster_labels[i];
+      cluster_to_embedding_indices[cluster_label].push_back(i);
+    }
+
+    for (const auto &kv : cluster_to_embedding_indices) {
+      int32_t cluster_label = kv.first;
+      const std::vector<int32_t> &indices = kv.second;
+      Eigen::VectorXf mean_embedding = Eigen::VectorXf::Zero(embeddings.cols());
+
+      for (int32_t idx : indices) {
+        mean_embedding += embeddings.row(idx);
+      }
+      mean_embedding /= indices.size();
+
+      // Store the mean embedding
+      speaker_embeddings_map[cluster_label] = std::vector<float>(
+          mean_embedding.data(), mean_embedding.data() + mean_embedding.size());
+    }
+
+    return speaker_embeddings_map;
+  }
+
   std::unordered_map<Int32Pair, int32_t, PairHash> ConvertChunkSpeakerToCluster(
       const std::vector<Int32Pair> &chunk_speaker_pair,
       const std::vector<int32_t> &cluster_labels) const {
@@ -583,7 +633,9 @@ class OfflineSpeakerDiarizationPyannoteImpl
   }
 
   OfflineSpeakerDiarizationResult ComputeResult(
-      const Matrix2DInt32 &final_labels) const {
+      const Matrix2DInt32 &final_labels,
+      const std::unordered_map<int32_t, std::vector<float>>
+          &speaker_embeddings_map) const {
     Matrix2DInt32 final_labels_t = final_labels.transpose();
     int32_t num_speakers = final_labels_t.rows();
     int32_t num_frames = final_labels_t.cols();
@@ -637,6 +689,13 @@ class OfflineSpeakerDiarizationPyannoteImpl
       // merge segments if the gap between them is less than min_duration_off
       MergeSegments(&this_speaker);
 
+      if (config_.extract_speaker_embeddings) {
+        auto it = speaker_embeddings_map.find(speaker_index);
+        if (it != speaker_embeddings_map.end()) {
+          ans.AddSpeakerEmbeddings(speaker_index, it->second);
+        }
+      }
+
       for (const auto &seg : this_speaker) {
         if (seg.Duration() > config_.min_duration_on) {
           ans.Add(seg);
@@ -648,7 +707,9 @@ class OfflineSpeakerDiarizationPyannoteImpl
   }
 
   OfflineSpeakerDiarizationResult HandleOneChunkSpecialCase(
-      const Matrix2DInt32 &final_labels, int32_t num_samples) const {
+      const Matrix2DInt32 &final_labels, int32_t num_samples,
+      const std::unordered_map<int32_t, std::vector<float>>
+          &speaker_embeddings_map) const {
     const auto &meta_data = segmentation_model_.GetModelMetaData();
     int32_t window_size = meta_data.window_size;
     int32_t window_shift = meta_data.window_shift;
@@ -656,7 +717,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
     bool has_last_chunk = (num_samples - window_size) % window_shift > 0;
     if (!has_last_chunk) {
-      return ComputeResult(final_labels);
+      return ComputeResult(final_labels, speaker_embeddings_map);
     }
 
     int32_t num_frames = final_labels.rows();
@@ -665,7 +726,8 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
     num_frames = (new_num_frames <= num_frames) ? new_num_frames : num_frames;
 
-    return ComputeResult(final_labels(Eigen::seq(0, num_frames), Eigen::all));
+    return ComputeResult(final_labels(Eigen::seq(0, num_frames), Eigen::all),
+                         speaker_embeddings_map);
   }
 
   void MergeSegments(
