@@ -113,44 +113,16 @@ class SpeakerEmbeddingExtractorNeMoImpl : public SpeakerEmbeddingExtractorImpl {
  private:
   void NormalizePerFeature(float *p, int32_t num_frames,
                            int32_t feat_dim) const {
-    // Vectors to store sums for each feature
-    std::vector<float> mean(feat_dim, 0.0f);
+    auto m = Eigen::Map<
+        Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(
+        p, num_frames, feat_dim);
 
-    // First pass: Compute the mean for each feature
-    for (int32_t i = 0; i < num_frames; ++i) {
-      for (int32_t j = 0; j < feat_dim; ++j) {
-        mean[j] += p[i * feat_dim + j];
-      }
-    }
-    for (int32_t j = 0; j < feat_dim; ++j) {
-      mean[j] /= num_frames;
-    }
+    auto EX = m.colwise().mean();
+    auto EX2 = m.array().pow(2).colwise().sum() / num_frames;
+    auto variance = EX2 - EX.array().pow(2);
+    auto stddev = variance.array().sqrt();
 
-    // Second pass: Compute the variance for each feature
-    std::vector<float> variance(feat_dim, 0.0f);
-    for (int32_t i = 0; i < num_frames; ++i) {
-      for (int32_t j = 0; j < feat_dim; ++j) {
-        float diff = p[i * feat_dim + j] - mean[j];
-        variance[j] += diff * diff;
-      }
-    }
-    for (int32_t j = 0; j < feat_dim; ++j) {
-      variance[j] /= num_frames;
-    }
-
-    // Compute standard deviation, ensuring it's not zero
-    std::vector<float> stddev(feat_dim);
-    for (int32_t j = 0; j < feat_dim; ++j) {
-      // Add a small epsilon to variance to avoid division by zero
-      stddev[j] = std::sqrt(std::max(variance[j], 0.0f) + 1e-8f);
-    }
-
-    // Normalize the data
-    for (int32_t i = 0; i < num_frames; ++i) {
-      for (int32_t j = 0; j < feat_dim; ++j) {
-        p[i * feat_dim + j] = (p[i * feat_dim + j] - mean[j]) / stddev[j];
-      }
-    }
+    m = (m.rowwise() - EX).array().rowwise() / (stddev.array() + 1e-5);
   }
 
  private:
