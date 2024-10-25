@@ -6,6 +6,7 @@
 #define SHERPA_ONNX_CSRC_LEXICON_H_
 
 #include <cstdint>
+#include <istream>
 #include <memory>
 #include <string>
 #include <unordered_map>

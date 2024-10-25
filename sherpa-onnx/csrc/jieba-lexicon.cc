@@ -11,16 +11,10 @@
 #include "cppjieba/Jieba.hpp"
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
-
-// implemented in ./lexicon.cc
-std::unordered_map<std::string, int32_t> ReadTokens(std::istream &is);
-
-std::vector<int32_t> ConvertTokensToIds(
-    const std::unordered_map<std::string, int32_t> &token2id,
-    const std::vector<std::string> &tokens);
 
 class JiebaLexicon::Impl {
  public:

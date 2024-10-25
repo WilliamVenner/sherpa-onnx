@@ -336,6 +336,42 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-nemo-ctc-giga-am-russian-2024-10-24",
+            idx=19,
+            lang="ru",
+            short_name="nemo_ctc_giga_am",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            rm -fv *.sh
+            rm -fv *.py
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-nemo-transducer-giga-am-russian-2024-10-24",
+            idx=20,
+            lang="ru",
+            short_name="nemo_transducer_giga_am",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            rm -fv *.sh
+            rm -fv *.py
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
     return models
 

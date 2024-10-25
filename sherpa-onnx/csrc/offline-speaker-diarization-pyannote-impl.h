@@ -139,7 +139,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
     auto chunk_speaker_samples_list_pair = GetChunkSpeakerSampleIndexes(labels);
 
-    // The embedding model may output NaN.valid_indexes contains indexes
+    // The embedding model may output NaN. valid_indexes contains indexes
     // in chunk_speaker_samples_list_pair.second that don't lead to
     // NaN embeddings.
     std::vector<int32_t> valid_indexes;
